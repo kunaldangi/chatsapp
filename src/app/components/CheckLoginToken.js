@@ -1,11 +1,18 @@
 "use client"
+import Cookies from 'js-cookie';
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 
 export default function CheckLoginToken() {
 	const router = useRouter();
+	const login_token = Cookies.get('login_token');
+
 	useEffect(()=>{
-	    sendCookie();
+		if (!login_token) {
+			router.push("/signin");
+		}else{
+			sendCookie();
+		}
 	}, []);
 
 	async function sendCookie() {

@@ -1,9 +1,8 @@
 import { createSlice } from "@reduxjs/toolkit";
 
 const initialState = {
-    isSet: false
+    data: null
 }; 
-
 
 export const userdataSlice = createSlice({
     name: 'userdata',
