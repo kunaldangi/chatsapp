@@ -16,7 +16,6 @@ export default function Messages() {
     function showMessages() {
         let elements = [];
         for (let i = (data.messages.length-1); i >= 0; i--) { // Reverse Loop because of latest message always comes at the top
-            console.log(data.messages[i], userdata);
             elements.push(
                 <div key={i}>
                     {showSenderMsg(data.messages[i])}

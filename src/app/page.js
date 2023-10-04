@@ -5,10 +5,10 @@ import Image from "next/image";
 import { useDispatch, useSelector } from "react-redux";
 import { setUserData } from "./redux/slices/userdataSlice";
 import MessageInput from "./components/MessageInput";
-import Contacts from "./components/Contacts";
+// import Contacts from "./components/Contacts";
 import Messages from "./components/Messages";
 import UserChats from "./components/UserChats";
-import socket from "./socket";
+// import socket from "./socket";
 
 export default function Home() {
 	// socket.emit('chat', "Hello World!");
