@@ -9,6 +9,7 @@ import MessageInput from "./components/MessageInput";
 import Messages from "./components/Messages";
 import UserChats from "./components/UserChats";
 // import socket from "./socket";
+import io from "socket.io-client";
 
 export default function Home() {
 	// socket.emit('chat', "Hello World!");
@@ -28,6 +29,15 @@ export default function Home() {
 			console.log(error);
 		}
 	}
+
+	const socket = io("http://localhost:8080", {
+		withCredentials: true,
+	});
+	/*socket.emit("chat", "Hello World!");
+
+	socket.on("chat", (message) => {
+		console.log(message);
+	});*/
 	
 	return (<>
 		<div className="main">

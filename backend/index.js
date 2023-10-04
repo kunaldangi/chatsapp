@@ -5,7 +5,7 @@ const bodyParser = require('body-parser');
 const cors = require('cors');
 const dotenv = require('dotenv'); dotenv.config();
 const jwt = require('jsonwebtoken');
-const cookie = require('cookie');
+const cookie = require("cookie");
 const { createServer } = require('node:http');
 const { join } = require('node:path');
 const { Server } = require('socket.io');
@@ -38,13 +38,13 @@ app.use(session({
 
 app.use('/auth/google', require('./routes/auth/google'));
 app.use(async (req, res, next) => {
-    if(!req.cookies.login_token){
+    if (!req.cookies.login_token) {
         return res.send(JSON.stringify({
             status: "failed!",
             action: "Invaild token!"
         }));
     }
-    else{
+    else {
         try {
             let result = await verifyToken(req.cookies.login_token, process.env.LOGIN_TOKEN_SECRET);
             req.token_data = result;
@@ -59,7 +59,7 @@ app.use(async (req, res, next) => {
 });
 app.use('/user', require('./routes/user'));
 
-app.use('/verifytoken', (req, res)=>{
+app.use('/verifytoken', (req, res) => {
     return res.send(JSON.stringify({
         status: "success!",
         action: "Vaild token!"
@@ -69,25 +69,23 @@ app.use('/verifytoken', (req, res)=>{
 app.use('/chats', require("./routes/chats"));
 
 io.use((socket, next) => {
-    // if(socket.handshake.headers.cookie === undefined){
-    //     return next(new Error('Authentication error'));
-    // }
-    const cookies = cookie.parse(socket.handshake.headers.cookie || '');
-    const loginToken = cookies.login_token;
-    // console.log('Login Token:', loginToken);
-    next();
+    const cookies = cookie.parse(socket.handshake.headers.cookie || "");
+    if (cookies.login_token) {
+        // console.log("Login Token:", cookies.login_token);
+        next();
+    }
 });
 
 
 io.on('connection', (socket) => {
-    // console.log('a user connected');
+    console.log('a user connected');
     socket.on('disconnect', () => {
-        // console.log('user disconnected');
+        console.log('user disconnected');
     });
 
-    socket.on('chat', (msg) => {
-        // console.log('message: ' + msg);
-    });
+    /*socket.on('chat', (msg) => {
+        console.log('message: ' + msg);
+    });*/
 });
 
 server.listen(port, () => {
@@ -101,12 +99,12 @@ server.listen(port, () => {
 
 function verifyToken(token, secret) {
     return new Promise((resolve, reject) => {
-      jwt.verify(token, secret, (err, decoded) => {
-        if (err) {
-          reject(err);
-        } else {
-          resolve(decoded);
-        }
-      });
+        jwt.verify(token, secret, (err, decoded) => {
+            if (err) {
+                reject(err);
+            } else {
+                resolve(decoded);
+            }
+        });
     });
 }
