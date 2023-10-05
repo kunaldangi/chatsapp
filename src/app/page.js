@@ -4,12 +4,13 @@ import { useEffect } from "react";
 import Image from "next/image";
 import { useDispatch, useSelector } from "react-redux";
 import { setUserData } from "./redux/slices/userdataSlice";
+import { setIsOnline } from "./redux/slices/userchatsSlice";
 import MessageInput from "./components/MessageInput";
 // import Contacts from "./components/Contacts";
 import Messages from "./components/Messages";
 import UserChats from "./components/UserChats";
-// import socket from "./socket";
-import io from "socket.io-client";
+import socket from "./socket";
+
 
 export default function Home() {
 	// socket.emit('chat', "Hello World!");
@@ -18,6 +19,23 @@ export default function Home() {
 
 	useEffect(() => {
 		getUserData();
+
+		socket.on('userOnline', (data) => {
+			// console.log(`User ${data.email} is online`);
+			dispatch(setIsOnline({email: data.email, isOnline: true}));
+			// Perform necessary actions
+		});
+	
+		socket.on('userOffline', (data) => {
+			// console.log(`User ${data.email} is offline`);
+			dispatch(setIsOnline({email: data.email, isOnline: false}));
+			// Perform necessary actions
+		});
+
+		return () => { // Cleanup events from the socket
+			socket.off('userOnline');
+			socket.off('userOffline');
+		};
 	}, []);
 	
 	async function getUserData() {
@@ -30,9 +48,7 @@ export default function Home() {
 		}
 	}
 
-	const socket = io("http://localhost:8080", {
-		withCredentials: true,
-	});
+	
 	/*socket.emit("chat", "Hello World!");
 
 	socket.on("chat", (message) => {

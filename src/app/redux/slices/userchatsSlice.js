@@ -12,10 +12,20 @@ export const userchatsSlice = createSlice({
             if(action.payload){
                 state.chats = action.payload;
             }
+        },
+        setIsOnline: (state, action) => {
+            if(state.chats){
+                for(let i = 0; i < state.chats.length; i++){
+                    if(state.chats[i].email === action.payload.email){
+                        state.chats[i].isOnline = action.payload.isOnline;
+                        break;
+                    }
+                }
+            }
         }
     }
 });
 
-export const {setUserchats} = userchatsSlice.actions;
+export const {setUserchats, setIsOnline} = userchatsSlice.actions;
 
 export default userchatsSlice.reducer;

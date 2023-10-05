@@ -45,7 +45,7 @@ export default function UserChats() {
     function showChats() {
         let elements = [];
         for (let i = 0; i < userchats.chats.length; i++) {
-            elements.push(<div key={i} onClick={() => onClickChat(i)}>{userchats.chats[i].username}</div>)
+            elements.push(<div key={i} onClick={() => onClickChat(i)}>{userchats.chats[i].username} {userchats.chats[i].isOnline ? <span style={{color: "greenyellow"}}>Online</span>: <span style={{color: "red"}}>Offline</span>}</div>);
         }
         return elements;
     }

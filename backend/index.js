@@ -10,6 +10,7 @@ const { createServer } = require('node:http');
 const { join } = require('node:path');
 const { Server } = require('socket.io');
 const connectDatabase = require("./config/db");
+const UserChat = require("./models/UserChat");
 
 connectDatabase("mongodb://127.0.0.1:27017/chatsapp");
 const app = express();
@@ -68,19 +69,72 @@ app.use('/verifytoken', (req, res) => {
 
 app.use('/chats', require("./routes/chats"));
 
-io.use((socket, next) => {
+io.use(async (socket, next) => {
     const cookies = cookie.parse(socket.handshake.headers.cookie || "");
     if (cookies.login_token) {
         // console.log("Login Token:", cookies.login_token);
-        next();
+        try {
+            let result = await verifyToken(cookies.login_token, process.env.LOGIN_TOKEN_SECRET);
+            socket.token_data = result;
+            next();
+        } catch (error) {
+            
+        }
     }
 });
 
 
-io.on('connection', (socket) => {
-    console.log('a user connected');
-    socket.on('disconnect', () => {
-        console.log('user disconnected');
+const connectedUsers = {};
+
+io.on('connection', async (socket) => {
+    console.log(`${socket.token_data.data.username} user connected`);
+    connectedUsers[socket.token_data.data.email] = socket;
+
+    await UserChat.updateMany(
+        { "participants.email": socket.token_data.data.email },
+        { $set: { "participants.$[elem].isOnline": true } },
+        { arrayFilters: [{ "elem.email": socket.token_data.data.email }] }
+    );
+
+    let chats = await UserChat.find({ "participants.email": socket.token_data.data.email });
+    if(chats){
+        for(let i = 0; i < chats.length; i++){
+            if(socket.token_data.data.email !== chats[i].participants[0].email && connectedUsers[chats[i].participants[0].email]){
+                // console.log(`You: ${socket.token_data.data.email} -> Online: ${chats[i].participants[0].email}`);
+                connectedUsers[chats[i].participants[0].email].emit('userOnline', {email: socket.token_data.data.email});
+            }
+            if(socket.token_data.data.email !== chats[i].participants[1].email && connectedUsers[chats[i].participants[1].email]){
+                // console.log(`You: ${socket.token_data.data.email} -> Online: ${chats[i].participants[1].email}`);
+                connectedUsers[chats[i].participants[1].email].emit('userOnline', {email: socket.token_data.data.email});
+            }
+        }
+    }
+
+    socket.on('disconnect', async () => {
+        console.log(`${socket.token_data.data.username} disconnected`);
+
+        await UserChat.updateMany(
+            { "participants.email": socket.token_data.data.email },
+            { $set: { "participants.$[elem].isOnline": false } },
+            { arrayFilters: [{ "elem.email": socket.token_data.data.email }] }
+        );
+
+        let chats = await UserChat.find({ "participants.email": socket.token_data.data.email });
+        if(chats){
+            for(let i = 0; i < chats.length; i++){
+                if(socket.token_data.data.email !== chats[i].participants[0].email && connectedUsers[chats[i].participants[0].email]){
+                    // console.log(`You: ${socket.token_data.data.email} -> Offline: ${chats[i].participants[0].email}`);
+                    connectedUsers[chats[i].participants[0].email].emit('userOffline', {email: socket.token_data.data.email});
+                }
+                if(socket.token_data.data.email !== chats[i].participants[1].email && connectedUsers[chats[i].participants[1].email]){
+                    // console.log(`You: ${socket.token_data.data.email} -> Offline: ${chats[i].participants[1].email}`);
+                    connectedUsers[chats[i].participants[1].email].emit('userOffline', {email: socket.token_data.data.email});
+                }
+            }
+        }
+        
+        delete connectedUsers[socket.token_data.data.email];
+        // console.log(`${connectedUsers[socket.token_data.data.email]} disconnected`);
     });
 
     /*socket.on('chat', (msg) => {

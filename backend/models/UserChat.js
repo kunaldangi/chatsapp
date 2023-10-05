@@ -9,6 +9,11 @@ const ParticipantsSchema = new Schema({
     email: {
         type: String,
         required: true
+    },
+    isOnline: {
+        type: Boolean,
+        required: true,
+        default: false
     }
 });
 
