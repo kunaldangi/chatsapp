@@ -1,8 +1,8 @@
 "use client"
 import "./MessageBoxStyle.css";
 import React, { useState } from 'react';
-import { setMessages } from "../redux/slices/messagesSlice";
 import { useDispatch, useSelector } from "react-redux";
+import socket from "../socket";
 
 function MessageInput() {
     // const [msgData, setMsgData] = useState({type: null, content: ""});
@@ -17,9 +17,10 @@ function MessageInput() {
         }
         if(e.key == "Enter" && holdKey != "Shift"){
             let msg = document.getElementById('message-input-id');
-
+            // let content = msg.innerHTML.replace(/<br>/g, '\n');
+        
             try {
-                let response = await fetch("http://localhost:8080/chats/", {
+                /*let response = await fetch("http://localhost:8080/chats/", {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -32,13 +33,24 @@ function MessageInput() {
                         message:{
                           sender: userdata.data.email,
                           receiver: msgData.userinfo.email,
-                          content: msg.innerText
+                          content: content
                         }
                     }),
                     credentials: 'include'
                 });
                 response = await response.json();
-                if (response.messages) dispatch(setMessages({userinfo: msgData.userinfo, messages: response.messages}));
+                if (response.messages) dispatch(setMessages({userinfo: msgData.userinfo, messages: response.messages}));*/
+                socket.emit('chatMsg', JSON.stringify({
+                    participant:{
+                        username: msgData.userinfo.username,
+                        email: msgData.userinfo.email
+                    },
+                    message:{
+                        sender: userdata.data.email,
+                        receiver: msgData.userinfo.email,
+                        content: msg.innerText.trim()
+                    }
+                }));
             } catch (error) {
                 console.log(error);
             }

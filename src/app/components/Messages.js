@@ -1,15 +1,22 @@
 "use client"
+import "./Messages.css";
+import { Fragment } from "react";
 import { useSelector } from "react-redux";
 export default function Messages() {
     const userdata = useSelector(state=>state.userdata);
     const data = useSelector(state=>state.messages);
 
     function showSenderMsg(msg){
+        let msgs = msg.content.split('\n');
+        let newMsgs = [];
+        for(let i=0; i<msgs.length; i++){
+            newMsgs.push(<Fragment key={i}>{msgs[i]}<br/></Fragment>);
+        }
         if(userdata.data.email == msg.sender){
-            return (<div style={{display: "flex", justifyContent: "flex-end"}}>{msg.content}</div>)
+            return (<div className="msg-box" style={{display: "flex", justifyContent: "flex-end"}}><span className="sub-msg-sender-box">{newMsgs}</span></div>)
         }
         else{
-            return (<div style={{display: "flex", justifyContent: "flex-start"}}>{msg.content}</div>)
+            return (<div style={{display: "flex", justifyContent: "flex-start"}}><span className="sub-msg-receiver-box">{newMsgs}</span></div>)
         }
     }
 

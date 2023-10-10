@@ -5,6 +5,7 @@ import Image from "next/image";
 import { useDispatch, useSelector } from "react-redux";
 import { setUserData } from "./redux/slices/userdataSlice";
 import { setIsOnline } from "./redux/slices/userchatsSlice";
+import { setMessages } from "./redux/slices/messagesSlice";
 import MessageInput from "./components/MessageInput";
 // import Contacts from "./components/Contacts";
 import Messages from "./components/Messages";
@@ -13,8 +14,8 @@ import socket from "./socket";
 
 
 export default function Home() {
-	// socket.emit('chat', "Hello World!");
 	const userdata = useSelector(state => state.userdata);
+	const msgData = useSelector(state=>state.messages);
 	const dispatch = useDispatch();
 
 	useEffect(() => {
@@ -37,6 +38,30 @@ export default function Home() {
 			socket.off('userOffline');
 		};
 	}, []);
+
+	useEffect(() =>{
+		socket.on('chatMsgSent', (data)=>{
+			if(msgData.userinfo && msgData.userinfo.email == data.participants[0].email){
+				dispatch(setMessages({userinfo: data.participants[0], messages: data.messages}));
+			}
+			if(msgData.userinfo && msgData.userinfo.email == data.participants[1].email){
+				dispatch(setMessages({userinfo: data.participants[1], messages: data.messages}));
+			}
+		});
+
+		socket.on('chatMsgRec', (data)=>{
+			if(msgData.userinfo && msgData.userinfo.email == data.participants[0].email){
+				dispatch(setMessages({userinfo: data.participants[0], messages: data.messages}));
+			}
+			if(msgData.userinfo && msgData.userinfo.email == data.participants[1].email){
+				dispatch(setMessages({userinfo: data.participants[1], messages: data.messages}));
+			}
+		});
+		return () =>{
+			socket.off('chatMsgSent');
+			socket.off('chatMsgRec');
+		}
+	}, [msgData]);
 	
 	async function getUserData() {
 		try {

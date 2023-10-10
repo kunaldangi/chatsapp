@@ -1,0 +1,13 @@
+.sub-msg-receiver-box{
+    margin: 5px;
+    border-radius: 5px;
+    padding: 10px;
+    background-color: #202c33;
+}
+
+.sub-msg-sender-box{
+    margin: 5px;
+    border-radius: 5px;
+    padding: 10px;
+    background-color: #005c4b;
+}

@@ -137,9 +137,61 @@ io.on('connection', async (socket) => {
         // console.log(`${connectedUsers[socket.token_data.data.email]} disconnected`);
     });
 
-    /*socket.on('chat', (msg) => {
-        console.log('message: ' + msg);
-    });*/
+    socket.on('chatMsg', async (data) => {
+        let msgData = JSON.parse(data);
+        // console.log(msgData);
+
+        const participants = [socket.token_data.data.email, msgData.participant.email];
+        const msg = msgData.message;
+
+        if (participants[0] != msgData.message.sender && participants[0] != msgData.message.receiver) return socket.emit('chatMsgError', JSON.stringify({ status: "failed!", action: "Participants do not match with message content." }));
+        if (participants[1] != msgData.message.sender && participants[1] != msgData.message.receiver) return socket.emit('chatMsgError', JSON.stringify({ status: "failed!", action: "Participants do not match with message content." }));
+
+
+        try {
+            const newMsg = {
+                sender: msg.sender,
+                receiver: msg.receiver,
+                content: msg.content
+            };
+            let chats = await UserChat.findOne({ "participants.email": { $all: participants } });
+            if (chats) {
+                const result = await UserChat.findByIdAndUpdate(
+                    chats._id,
+                    {
+                        $push: {
+                            messages: {
+                                $each: [newMsg],
+                                $position: 0
+                            }
+                        }
+                    },
+                    { new: true }
+                );
+                if(connectedUsers[msgData.participant.email]){
+                    connectedUsers[msgData.participant.email].emit('chatMsgRec', result);
+                }
+                socket.emit('chatMsgSent', result);
+            }
+            else {
+                const newUserChat = new UserChat({
+                    participants: [
+                        { username: req.token_data.data.username, email: participants[0] },
+                        { username: req.body.participant.username, email: participants[1] }
+                    ],
+                    messages: newMsg
+                });
+                await newUserChat.save();
+                if(connectedUsers[msgData.participant.email]){
+                    connectedUsers[msgData.participant.email].emit('chatMsgRec', newUserChat);
+                }
+                socket.emit('chatMsgSent', newUserChat);
+            }
+        } catch (error) {
+            console.log(error);
+            socket.emit('chatMsgError', JSON.stringify({ status: "failed!", action: `${error}` }));
+        }
+    });
 });
 
 server.listen(port, () => {

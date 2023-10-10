@@ -36,6 +36,7 @@ export default function UserChats() {
                 credentials: 'include'
             });
             response = await response.json();
+            console.log(userchats.chats[index]);
             if (response.messages) dispatch(setMessages({userinfo: userchats.chats[index], messages: response.messages}));
         } catch (error) {
             console.log(error);

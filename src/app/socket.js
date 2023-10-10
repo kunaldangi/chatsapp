@@ -1,10 +1,8 @@
 import io from 'socket.io-client';
-const socket = io('http://localhost:8080', {
-    withCredentials: true,
-});
+let socket = null;
+if(!socket){
+    socket = io('http://localhost:8080', {
+        withCredentials: true,
+    });
+}
 export default socket;
-
-
-/*const socket = io("http://localhost:8080", {
-    withCredentials: true,
-});*/

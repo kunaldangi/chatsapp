@@ -1,9 +1,9 @@
-body{
+body {
     background-color: var(--backgroundColor);
 }
 
 
-.main{
+.main {
     height: 100vh;
     min-width: 745px;
     display: flex;
@@ -11,7 +11,7 @@ body{
 }
 
 
-.main-left{
+.main-left {
     flex-basis: 40%;
 
     display: flex;
@@ -20,28 +20,28 @@ body{
     border: 1px solid blue;
 }
 
-.left-header{
+.left-header {
     height: 40px;
     margin: 3px;
     background-color: #202c33;
     border: 1px solid rgb(37, 214, 37);
 }
 
-.left-middle{
+.left-middle {
     flex-grow: 1;
     overflow: scroll;
     padding: 5px;
     border: 1px solid red;
 }
 
-.left-middle-search{
+.left-middle-search {
     position: relative;
     top: 0;
     left: 0;
     border: 1px solid salmon;
 }
 
-.main-right{
+.main-right {
     flex-basis: 60%;
 
     display: flex;
@@ -50,18 +50,37 @@ body{
     border: 1px solid red;
 }
 
-.right-header{
+.right-header {
     height: 40px;
     background-color: #202c33;
     border: 1px solid rgb(239, 255, 18);
 }
 
-.right-middle{
+.right-middle {
     flex-grow: 1;
-    overflow: scroll;
+    overflow: auto;
     border: 1px solid rgb(51, 252, 51);
 }
 
-.right-bottom{
+.right-middle::-webkit-scrollbar-track {
+    background-color: transparent;
+}
+
+.right-middle::-webkit-scrollbar-track-piece:start {
+    background-color: transparent;
+    border: none;
+}
+.right-middle::-webkit-scrollbar-track-piece:end {
+    background-color: transparent;
+    border: none;
+}
+
+
+.right-middle::-webkit-scrollbar-thumb {
+    background-color: rgba(128, 128, 128, 0.353);
+    border-radius: 0px;
+}
+
+.right-bottom {
     border: 1px solid turquoise;
 }
