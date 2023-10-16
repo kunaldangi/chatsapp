@@ -3,7 +3,8 @@ import React from 'react';
 
 const SignInWithGoogle = ({children}) => {
     const handleSignInWithGoogle = () => {
-        window.location.href = 'http://localhost:8080/auth/google';
+        window.location.href = '/auth/google';
+        // window.location.href = 'http://localhost:8080/auth/google';
     };
 
     return (

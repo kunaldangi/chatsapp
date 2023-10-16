@@ -73,7 +73,7 @@ router.get('/callback', passport.authenticate('google', { failureRedirect: '/' }
             // console.log("Payload: ", payload, "\nLogin Token: ", login_token);
             res.cookie('login_token', `${login_token}`);
         }
-        res.redirect('http://localhost:3000');
+        res.redirect('http://localhost:8080');
     }
 );
 
