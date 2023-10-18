@@ -74,12 +74,6 @@ export default function Home() {
 	}
 
 	
-	/*socket.emit("chat", "Hello World!");
-
-	socket.on("chat", (message) => {
-		console.log(message);
-	});*/
-	
 	return (<>
 		<div className="main">
 
@@ -101,7 +95,7 @@ export default function Home() {
 				<header className="right-header">
 					Right Header
 				</header>
-				<div className="right-middle">
+				<div className="right-middle" id="msgs-box-id">
 					<Messages />
 				</div>
 

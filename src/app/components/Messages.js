@@ -1,5 +1,6 @@
 "use client"
 import "./Messages.css";
+import { useEffect } from "react";
 import { Fragment } from "react";
 import { useSelector } from "react-redux";
 export default function Messages() {
@@ -30,6 +31,16 @@ export default function Messages() {
             )
         }
         return elements;
+    }
+
+    useEffect(()=>{
+        console.log("Messages Updated");
+        setMessagesScroll(document.getElementById("msgs-box-id").scrollHeight);
+    }, [data.messages]);
+
+    function setMessagesScroll(value) {
+        let msgBox = document.getElementById("msgs-box-id");
+        msgBox.scrollTop = value;
     }
 
     return (<>

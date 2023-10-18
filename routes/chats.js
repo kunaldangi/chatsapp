@@ -1,5 +1,5 @@
 const express = require('express');
-// const User = require("../models/User");
+const User = require("../models/User");
 const UserChat = require("../models/UserChat");
 const router = express.Router();
 
@@ -8,11 +8,37 @@ router.get('/', async (req, res) => { // get all chats with participants of a us
 		let chats = await UserChat.find({ "participants.email": req.token_data.data.email });
 		if (chats) {
 			let total_chat_participants = [];
+			let participants_emails = [];
 			for (let i = 0; i < chats.length; i++) {
-				if(chats[i].participants[0].email != req.token_data.data.email) total_chat_participants.push(chats[i].participants[0]);
-				if(chats[i].participants[1].email != req.token_data.data.email) total_chat_participants.push(chats[i].participants[1]);
+				if(chats[i].participants[0].email != req.token_data.data.email){
+					total_chat_participants.push(chats[i].participants[0]);
+					participants_emails.push(chats[i].participants[0].email);
+				}
+				if(chats[i].participants[1].email != req.token_data.data.email){
+					total_chat_participants.push(chats[i].participants[1]);
+					participants_emails.push(chats[i].participants[1].email);
+				}
 			}
-			res.send(total_chat_participants);
+
+			let profileImages = await User.find({email: { $in: participants_emails }}, {_id: 0, profileImage: 1, email: 1});
+
+			let final_data = {
+				participants: total_chat_participants,
+				profileImages: profileImages
+			};
+
+			// total_chat_participants.forEach(participant => {
+			// 	const matchingProfileImage = profileImages.find(image => image.email === participant.email);
+			// 	if (matchingProfileImage) {
+			// 	  	participant.profileImage = matchingProfileImage.profileImage;
+			// 		// console.log(participant.profileImage);
+			// 	}
+			// });
+
+			// console.log(final_data);
+
+
+			res.send(final_data);
 		}
 		else {
 			res.send(JSON.stringify({ status: "failed!", action: "Chat not found!" }));

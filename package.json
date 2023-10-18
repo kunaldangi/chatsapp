@@ -3,9 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "node index.js",
+    "dev": "nodemon index.js",
     "build": "next build",
-    "start": "node index.js",
+    "start": "nodemon index.js",
     "lint": "next lint"
   },
   "dependencies": {
@@ -21,7 +21,7 @@
     "google-auth-library": "^9.1.0",
     "js-cookie": "^3.0.5",
     "jsonwebtoken": "^9.0.2",
-    "mongoose": "^7.6.2",
+    "mongoose": "^7.6.3",
     "next": "latest",
     "passport": "^0.6.0",
     "passport-google-oauth20": "^2.0.0",
