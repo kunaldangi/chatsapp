@@ -33,6 +33,11 @@ const MessagesSchema = new Schema({
     date:{
         type: String,
         default: Date.now
+    },
+    isRead:{
+        type: Boolean,
+        required: true,
+        default: false
     }
 })
 

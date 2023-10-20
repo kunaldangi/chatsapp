@@ -206,6 +206,11 @@ nextApp.prepare().then(() => {
                 socket.emit('chatMsgError', JSON.stringify({ status: "failed!", action: `${error}` }));
             }
         });
+
+        socket.on('msgRead', async (data) => {
+            let msgData = JSON.parse(data);
+            console.log(msgData);
+        });
     });
     
     app.use(express.static(path.join(__dirname, 'public')));

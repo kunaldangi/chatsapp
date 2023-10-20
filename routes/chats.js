@@ -27,17 +27,6 @@ router.get('/', async (req, res) => { // get all chats with participants of a us
 				profileImages: profileImages
 			};
 
-			// total_chat_participants.forEach(participant => {
-			// 	const matchingProfileImage = profileImages.find(image => image.email === participant.email);
-			// 	if (matchingProfileImage) {
-			// 	  	participant.profileImage = matchingProfileImage.profileImage;
-			// 		// console.log(participant.profileImage);
-			// 	}
-			// });
-
-			// console.log(final_data);
-
-
 			res.send(final_data);
 		}
 		else {
