@@ -22,10 +22,20 @@ export const userchatsSlice = createSlice({
                     }
                 }
             }
+        },
+        setUnreadMsgs: (state, action) => {
+            if(state.chats){
+                for(let i = 0; i < state.chats.length; i++){
+                    if(state.chats[i].email === action.payload.email){
+                        state.chats[i].unreadMsgs = action.payload.unreadMsgs;
+                        break;
+                    }
+                }
+            }
         }
     }
 });
 
-export const {setUserchats, setIsOnline} = userchatsSlice.actions;
+export const {setUserchats, setIsOnline, setUnreadMsgs} = userchatsSlice.actions;
 
 export default userchatsSlice.reducer;

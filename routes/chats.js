@@ -11,10 +11,12 @@ router.get('/', async (req, res) => { // get all chats with participants of a us
 			let participants_emails = [];
 			for (let i = 0; i < chats.length; i++) {
 				if(chats[i].participants[0].email != req.token_data.data.email){
+					chats[i].participants[0].unreadMsgs = chats[i].participants[1].unreadMsgs; // unreadMsgs of the receiver
 					total_chat_participants.push(chats[i].participants[0]);
 					participants_emails.push(chats[i].participants[0].email);
 				}
 				if(chats[i].participants[1].email != req.token_data.data.email){
+					chats[i].participants[1].unreadMsgs = chats[i].participants[0].unreadMsgs; // unreadMsgs of the receiver
 					total_chat_participants.push(chats[i].participants[1]);
 					participants_emails.push(chats[i].participants[1].email);
 				}

@@ -1,0 +1,18 @@
+version: '3'
+
+services:
+  chatsapp:
+    image: chatsapp:latest
+    container_name: chatsapp-container
+    ports:
+      - "8080:8080"
+    depends_on:
+      - mongodb
+    environment:
+      MONGO_URI: mongodb://mongodb:27017/chatsapp
+
+  mongodb:
+    image: mongo:latest
+    container_name: mongodb-container
+    ports:
+      - "27017:27017"

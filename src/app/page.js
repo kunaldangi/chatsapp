@@ -4,8 +4,8 @@ import { useEffect } from "react";
 import Image from "next/image";
 import { useDispatch, useSelector } from "react-redux";
 import { setUserData } from "./redux/slices/userdataSlice";
-import { setIsOnline } from "./redux/slices/userchatsSlice";
-import { setMessages } from "./redux/slices/messagesSlice";
+import { setIsOnline, setUnreadMsgs } from "./redux/slices/userchatsSlice";
+import { setMessages, setMessageRead } from "./redux/slices/messagesSlice";
 import MessageInput from "./components/MessageInput";
 // import Contacts from "./components/Contacts";
 import Messages from "./components/Messages";
@@ -22,15 +22,11 @@ export default function Home() {
 		getUserData();
 
 		socket.on('userOnline', (data) => {
-			// console.log(`User ${data.email} is online`);
 			dispatch(setIsOnline({email: data.email, isOnline: true}));
-			// Perform necessary actions
 		});
 	
 		socket.on('userOffline', (data) => {
-			// console.log(`User ${data.email} is offline`);
 			dispatch(setIsOnline({email: data.email, isOnline: false}));
-			// Perform necessary actions
 		});
 
 		return () => { // Cleanup events from the socket
@@ -57,9 +53,21 @@ export default function Home() {
 				dispatch(setMessages({userinfo: data.participants[1], messages: data.messages}));
 			}
 		});
+
+		socket.on('msgReadRec', (data)=>{
+			dispatch(setMessageRead({msgId: parseInt(data.msgId), isRead: data.messages.isRead, isReceiver: false}));
+
+		});
+
+		socket.on('remainUnreadMsgs', (data)=>{
+			// console.log(data);
+			dispatch(setUnreadMsgs({email: data.email, unreadMsgs: data.unreadMsgs}));
+		});
+
 		return () =>{
 			socket.off('chatMsgSent');
 			socket.off('chatMsgRec');
+			socket.off('msgReadRec');
 		}
 	}, [msgData]);
 	

@@ -21,7 +21,7 @@ const handle = nextApp.getRequestHandler();
 
 nextApp.prepare().then(() => {
 
-    connectDatabase("mongodb://127.0.0.1:27017/chatsapp");
+    connectDatabase("mongodb://mongodb:27017/chatsapp");
     const app = express();
     const server = createServer(app);
     const io = new Server(server, {
@@ -114,11 +114,9 @@ nextApp.prepare().then(() => {
         if(chats){
             for(let i = 0; i < chats.length; i++){
                 if(socket.token_data.data.email !== chats[i].participants[0].email && connectedUsers[chats[i].participants[0].email]){
-                    // console.log(`You: ${socket.token_data.data.email} -> Online: ${chats[i].participants[0].email}`);
                     connectedUsers[chats[i].participants[0].email].emit('userOnline', {email: socket.token_data.data.email});
                 }
                 if(socket.token_data.data.email !== chats[i].participants[1].email && connectedUsers[chats[i].participants[1].email]){
-                    // console.log(`You: ${socket.token_data.data.email} -> Online: ${chats[i].participants[1].email}`);
                     connectedUsers[chats[i].participants[1].email].emit('userOnline', {email: socket.token_data.data.email});
                 }
             }
@@ -137,30 +135,28 @@ nextApp.prepare().then(() => {
             if(chats){
                 for(let i = 0; i < chats.length; i++){
                     if(socket.token_data.data.email !== chats[i].participants[0].email && connectedUsers[chats[i].participants[0].email]){
-                        // console.log(`You: ${socket.token_data.data.email} -> Offline: ${chats[i].participants[0].email}`);
                         connectedUsers[chats[i].participants[0].email].emit('userOffline', {email: socket.token_data.data.email});
                     }
                     if(socket.token_data.data.email !== chats[i].participants[1].email && connectedUsers[chats[i].participants[1].email]){
-                        // console.log(`You: ${socket.token_data.data.email} -> Offline: ${chats[i].participants[1].email}`);
                         connectedUsers[chats[i].participants[1].email].emit('userOffline', {email: socket.token_data.data.email});
                     }
                 }
             }
             
             delete connectedUsers[socket.token_data.data.email];
-            // console.log(`${connectedUsers[socket.token_data.data.email]} disconnected`);
         });
 
         socket.on('chatMsg', async (data) => {
             let msgData = JSON.parse(data);
             // console.log(msgData);
 
-            const participants = [socket.token_data.data.email, msgData.participant.email];
+            let sender = socket.token_data.data.email;
+            let receiver = msgData.participant.email;
+            const participants = [sender, receiver];
             const msg = msgData.message;
 
             if (participants[0] != msgData.message.sender && participants[0] != msgData.message.receiver) return socket.emit('chatMsgError', JSON.stringify({ status: "failed!", action: "Participants do not match with message content." }));
             if (participants[1] != msgData.message.sender && participants[1] != msgData.message.receiver) return socket.emit('chatMsgError', JSON.stringify({ status: "failed!", action: "Participants do not match with message content." }));
-
 
             try {
                 const newMsg = {
@@ -185,13 +181,24 @@ nextApp.prepare().then(() => {
                     if(connectedUsers[msgData.participant.email]){
                         connectedUsers[msgData.participant.email].emit('chatMsgRec', result);
                     }
+                    await chats.save();
+
+                    let unreadMsgs = await UserChat.aggregate([
+                        {$match: {"_id": chats._id}},
+                        {$unwind: "$messages"},
+                        {$match: {"messages.isRead": false,"messages.receiver": receiver}},
+                        {$group: {_id: null, count: { $sum: 1 }}},
+                        {$project: {_id: 0}}
+                    ]);
+                    console.log(unreadMsgs[0].count);
+
                     socket.emit('chatMsgSent', result);
                 }
                 else {
                     const newUserChat = new UserChat({
                         participants: [
-                            { username: req.token_data.data.username, email: participants[0] },
-                            { username: req.body.participant.username, email: participants[1] }
+                            { username: req.token_data.data.username, email: participants[0], unreadMsgs: 1},
+                            { username: req.body.participant.username, email: participants[1], }
                         ],
                         messages: newMsg
                     });
@@ -209,7 +216,34 @@ nextApp.prepare().then(() => {
 
         socket.on('msgRead', async (data) => {
             let msgData = JSON.parse(data);
-            console.log(msgData);
+            const get = await UserChat.findOne({ 
+                $and: [
+                    { 'participants.email': msgData.messages.sender },
+                    { 'participants.email': msgData.messages.receiver },
+                    { 'messages._id': msgData.messages._id }
+                ]
+            });
+            get.messages[msgData.msgId].isRead = true;
+            msgData.messages.isRead = true;
+
+            
+            let unreadMsgs = await UserChat.aggregate([
+                {$match: {"_id": "651ef921b166842816b3acb2"}},
+                {$unwind: "$messages"},
+                {$match: {"messages.isRead": true,"messages.receiver": "arya250611@gmail.com"}},
+                {$group: {_id: null,countOfReadMessages: { $sum: 1 }}},
+                {$project: {_id: 0}}
+            ]);
+            console.log(unreadMsgs);
+            
+
+            socket.emit('remainUnreadMsgs', {email: msgData.messages.sender, unreadMsgs: get.participants[0].unreadMsgs});
+            
+            await get.save();
+            
+            if(connectedUsers[msgData.messages.sender]){
+                connectedUsers[msgData.messages.sender].emit('msgReadRec', msgData);
+            }
         });
     });
     
@@ -222,10 +256,6 @@ nextApp.prepare().then(() => {
     server.listen(port, () => {
         console.log(`Server listening on PORT: ${port}`);
     });
-
-    // app.listen(port, () => {
-    //     console.log(`Server listening on PORT: ${port}`);
-    // });
 
 
     function verifyToken(token, secret) {

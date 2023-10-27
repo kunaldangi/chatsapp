@@ -14,6 +14,11 @@ const ParticipantsSchema = new Schema({
         type: Boolean,
         required: true,
         default: false
+    },
+    unreadMsgs: {
+        type: Number,
+        required: true,
+        default: 0
     }
 });
 
