@@ -7,12 +7,12 @@ const dotenv = require('dotenv'); dotenv.config();
 const jwt = require('jsonwebtoken');
 const cookie = require("cookie");
 const { createServer } = require('node:http');
-const { join } = require('node:path');
 const { Server } = require('socket.io');
 const connectDatabase = require("./config/db");
-const UserChat = require("./models/UserChat");
 const next = require('next');
 const path = require('path');
+const { setupSocketConnection } = require("./socket");
+const {verifyToken} = require("./utils/auth");
 
 const dev = true // true for development, false for production
 const port = 8080;
@@ -21,12 +21,12 @@ const handle = nextApp.getRequestHandler();
 
 nextApp.prepare().then(() => {
 
-    connectDatabase("mongodb://mongodb:27017/chatsapp");
+    connectDatabase("mongodb://localhost:27017/chatsapp");
     const app = express();
     const server = createServer(app);
     const io = new Server(server, {
         cors: {
-            origin: "http://localhost:3000",
+            // origin: "http://localhost:3000",
             credentials: true
         }
     });
@@ -86,7 +86,6 @@ nextApp.prepare().then(() => {
     io.use(async (socket, next) => {
         const cookies = cookie.parse(socket.handshake.headers.cookie || "");
         if (cookies.login_token) {
-            // console.log("Login Token:", cookies.login_token);
             try {
                 let result = await verifyToken(cookies.login_token, process.env.LOGIN_TOKEN_SECRET);
                 socket.token_data = result;
@@ -97,155 +96,7 @@ nextApp.prepare().then(() => {
         }
     });
 
-
-    const connectedUsers = {};
-
-    io.on('connection', async (socket) => {
-        console.log(`${socket.token_data.data.username} user connected`);
-        connectedUsers[socket.token_data.data.email] = socket;
-
-        await UserChat.updateMany(
-            { "participants.email": socket.token_data.data.email },
-            { $set: { "participants.$[elem].isOnline": true } },
-            { arrayFilters: [{ "elem.email": socket.token_data.data.email }] }
-        );
-
-        let chats = await UserChat.find({ "participants.email": socket.token_data.data.email });
-        if(chats){
-            for(let i = 0; i < chats.length; i++){
-                if(socket.token_data.data.email !== chats[i].participants[0].email && connectedUsers[chats[i].participants[0].email]){
-                    connectedUsers[chats[i].participants[0].email].emit('userOnline', {email: socket.token_data.data.email});
-                }
-                if(socket.token_data.data.email !== chats[i].participants[1].email && connectedUsers[chats[i].participants[1].email]){
-                    connectedUsers[chats[i].participants[1].email].emit('userOnline', {email: socket.token_data.data.email});
-                }
-            }
-        }
-
-        socket.on('disconnect', async () => {
-            console.log(`${socket.token_data.data.username} disconnected`);
-
-            await UserChat.updateMany(
-                { "participants.email": socket.token_data.data.email },
-                { $set: { "participants.$[elem].isOnline": false } },
-                { arrayFilters: [{ "elem.email": socket.token_data.data.email }] }
-            );
-
-            let chats = await UserChat.find({ "participants.email": socket.token_data.data.email });
-            if(chats){
-                for(let i = 0; i < chats.length; i++){
-                    if(socket.token_data.data.email !== chats[i].participants[0].email && connectedUsers[chats[i].participants[0].email]){
-                        connectedUsers[chats[i].participants[0].email].emit('userOffline', {email: socket.token_data.data.email});
-                    }
-                    if(socket.token_data.data.email !== chats[i].participants[1].email && connectedUsers[chats[i].participants[1].email]){
-                        connectedUsers[chats[i].participants[1].email].emit('userOffline', {email: socket.token_data.data.email});
-                    }
-                }
-            }
-            
-            delete connectedUsers[socket.token_data.data.email];
-        });
-
-        socket.on('chatMsg', async (data) => {
-            let msgData = JSON.parse(data);
-            // console.log(msgData);
-
-            let sender = socket.token_data.data.email;
-            let receiver = msgData.participant.email;
-            const participants = [sender, receiver];
-            const msg = msgData.message;
-
-            if (participants[0] != msgData.message.sender && participants[0] != msgData.message.receiver) return socket.emit('chatMsgError', JSON.stringify({ status: "failed!", action: "Participants do not match with message content." }));
-            if (participants[1] != msgData.message.sender && participants[1] != msgData.message.receiver) return socket.emit('chatMsgError', JSON.stringify({ status: "failed!", action: "Participants do not match with message content." }));
-
-            try {
-                const newMsg = {
-                    sender: msg.sender,
-                    receiver: msg.receiver,
-                    content: msg.content
-                };
-                let chats = await UserChat.findOne({ "participants.email": { $all: participants } });
-                if (chats) {
-                    const result = await UserChat.findByIdAndUpdate(
-                        chats._id,
-                        {
-                            $push: {
-                                messages: {
-                                    $each: [newMsg],
-                                    $position: 0
-                                }
-                            }
-                        },
-                        { new: true }
-                    );
-                    if(connectedUsers[msgData.participant.email]){
-                        connectedUsers[msgData.participant.email].emit('chatMsgRec', result);
-                    }
-                    await chats.save();
-
-                    let unreadMsgs = await UserChat.aggregate([
-                        {$match: {"_id": chats._id}},
-                        {$unwind: "$messages"},
-                        {$match: {"messages.isRead": false,"messages.receiver": receiver}},
-                        {$group: {_id: null, count: { $sum: 1 }}},
-                        {$project: {_id: 0}}
-                    ]);
-                    console.log(unreadMsgs[0].count);
-
-                    socket.emit('chatMsgSent', result);
-                }
-                else {
-                    const newUserChat = new UserChat({
-                        participants: [
-                            { username: req.token_data.data.username, email: participants[0], unreadMsgs: 1},
-                            { username: req.body.participant.username, email: participants[1], }
-                        ],
-                        messages: newMsg
-                    });
-                    await newUserChat.save();
-                    if(connectedUsers[msgData.participant.email]){
-                        connectedUsers[msgData.participant.email].emit('chatMsgRec', newUserChat);
-                    }
-                    socket.emit('chatMsgSent', newUserChat);
-                }
-            } catch (error) {
-                console.log(error);
-                socket.emit('chatMsgError', JSON.stringify({ status: "failed!", action: `${error}` }));
-            }
-        });
-
-        socket.on('msgRead', async (data) => {
-            let msgData = JSON.parse(data);
-            const get = await UserChat.findOne({ 
-                $and: [
-                    { 'participants.email': msgData.messages.sender },
-                    { 'participants.email': msgData.messages.receiver },
-                    { 'messages._id': msgData.messages._id }
-                ]
-            });
-            get.messages[msgData.msgId].isRead = true;
-            msgData.messages.isRead = true;
-
-            
-            let unreadMsgs = await UserChat.aggregate([
-                {$match: {"_id": "651ef921b166842816b3acb2"}},
-                {$unwind: "$messages"},
-                {$match: {"messages.isRead": true,"messages.receiver": "arya250611@gmail.com"}},
-                {$group: {_id: null,countOfReadMessages: { $sum: 1 }}},
-                {$project: {_id: 0}}
-            ]);
-            console.log(unreadMsgs);
-            
-
-            socket.emit('remainUnreadMsgs', {email: msgData.messages.sender, unreadMsgs: get.participants[0].unreadMsgs});
-            
-            await get.save();
-            
-            if(connectedUsers[msgData.messages.sender]){
-                connectedUsers[msgData.messages.sender].emit('msgReadRec', msgData);
-            }
-        });
-    });
+    setupSocketConnection(io);
     
     app.use(express.static(path.join(__dirname, 'public')));
 
@@ -256,19 +107,5 @@ nextApp.prepare().then(() => {
     server.listen(port, () => {
         console.log(`Server listening on PORT: ${port}`);
     });
-
-
-    function verifyToken(token, secret) {
-        return new Promise((resolve, reject) => {
-            jwt.verify(token, secret, (err, decoded) => {
-                if (err) {
-                    reject(err);
-                } else {
-                    resolve(decoded);
-                }
-            });
-        });
-    }
-
 
 });

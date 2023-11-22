@@ -4,6 +4,7 @@ import socket from "../../socket";
 const initialState = {
     userinfo: null,
     messages: null,
+    hasNoMessages: false,
     _id: null
 };
 
@@ -15,6 +16,7 @@ export const messagesSlice = createSlice({
             if(action.payload){
                 state.userinfo = action.payload.userinfo;
                 state.messages = action.payload.messages;
+                state.hasNoMessages = action.payload.hasNoMessages;
                 state._id = action.payload.messagesId;
             }
         },

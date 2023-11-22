@@ -1,5 +1,5 @@
 "use client"
-import "./Messages.css";
+import "./styles/Messages.css";
 import { useEffect } from "react";
 import { Fragment } from "react";
 import Image from "next/image";
@@ -18,7 +18,6 @@ export default function Messages() {
             newMsgs.push(<Fragment key={i}>{msgs[i]}<br /></Fragment>);
         }
         if (userdata.data.email == msg.sender) {
-            console.log(msgs.isRead);
             return (<div className="msg-box" style={{ display: "flex", justifyContent: "flex-end" }}>
                 <span className="sub-msg-sender-box">
                     {newMsgs}
@@ -77,14 +76,22 @@ export default function Messages() {
         msgBox.scrollTop = value;
     }
 
+    function hasMessage() {
+        if(data.messages == null){
+            console.log("No messages");
+        }
+        else{
+            console.log("Messages");
+        }
+    }
+
     return (<>
+        {/* {console.log(data.hasNoMessages)} */}
         {data.messages ?
             <>
                 {showMessages()}
             </> :
-            <>
-                Click on contact to display messages.
-            </>
+            data.hasNoMessages ? <> No messages. Say Hi! </> : <> Click on contact to display messages. </>
         }
     </>);
 }

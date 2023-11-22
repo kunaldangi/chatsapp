@@ -8,7 +8,7 @@ export default function Contacts({ data }) {
 
     async function onClickContact(index) {
         try {
-            let response = await fetch("http://localhost:8080/chats/getmessage", {
+            let response = await fetch("chats/getmessage", {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

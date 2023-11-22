@@ -1,6 +1,6 @@
 "use client"
 import "./styles.css";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import Image from "next/image";
 import { useDispatch, useSelector } from "react-redux";
 import { setUserData } from "./redux/slices/userdataSlice";
@@ -10,6 +10,8 @@ import MessageInput from "./components/MessageInput";
 // import Contacts from "./components/Contacts";
 import Messages from "./components/Messages";
 import UserChats from "./components/UserChats";
+import AddContact from "./components/AddContact";
+import UserContacts from "./components/UserContacts";
 import socket from "./socket";
 
 
@@ -17,6 +19,9 @@ export default function Home() {
 	const userdata = useSelector(state => state.userdata);
 	const msgData = useSelector(state=>state.messages);
 	const dispatch = useDispatch();
+
+	const [isAddContact, setIsAddContact] = useState(false);
+	const [isContact, setIsContact] = useState(false);
 
 	useEffect(() => {
 		getUserData();
@@ -60,7 +65,6 @@ export default function Home() {
 		});
 
 		socket.on('remainUnreadMsgs', (data)=>{
-			// console.log(data);
 			dispatch(setUnreadMsgs({email: data.email, unreadMsgs: data.unreadMsgs}));
 		});
 
@@ -73,7 +77,7 @@ export default function Home() {
 	
 	async function getUserData() {
 		try {
-			let response = await fetch("http://localhost:8080/user/details", { credentials: 'include' });
+			let response = await fetch("user/details", { credentials: 'include' });
 			let data = await response.json();
 			dispatch(setUserData(data));
 		} catch (error) {
@@ -81,21 +85,38 @@ export default function Home() {
 		}
 	}
 
+	function showAddContact(){
+		if(isAddContact){
+			setIsAddContact(false);
+		}else{
+			setIsAddContact(true);
+		}
+	}
+
+	function showContacts() {
+		if(isContact){
+			setIsContact(false);
+		}else{
+			setIsContact(true);
+		}
+	}
 	
 	return (<>
 		<div className="main">
 
 			<div className="main-left">
-				<header className="left-header">
+				<div className="left-header" style={{display: "flex"}}>
 					{userdata.data && userdata.data.profileImage ? <Image src={userdata.data.profileImage} alt="Image not found!" height={40} width={40} priority={true} /> : <Image src="/defaultprofileImg.png" alt="Image not found!" height={40} width={40} priority={true} />}
-					<Image src="/addcontact.png" alt="Image not found!" height={40} width={40} priority={true} />
-				</header>
+					<div style={{flex: "1", display: "flex", justifyContent: "end"}}>
+						<Image src="/contacts.png" alt="Image not found!" height={40} width={40} priority={true} onClick={()=>{showContacts();}}/>
+						<Image src="/addcontact.png" alt="Image not found!" height={40} width={40} priority={true} onClick={()=>{showAddContact();}}/>
+					</div>
+				</div>
 				<div className="left-middle">
 					<div className="left-middle-search">
 						Search
 					</div>
-					{/* {userdata.data ? <Contacts data={userdata.data} /> : <>No Contacts</>} */}
-					<UserChats />
+					{isContact ? <UserContacts userdata={userdata.data} setIsContact={setIsContact} /> : <UserChats />}
 				</div>
 			</div>
 
@@ -112,5 +133,7 @@ export default function Home() {
 				</div>
 			</div>
 		</div>
+
+		{isAddContact ? <AddContact setIsAddContact={setIsAddContact}/> : <></>}
 	</>)
 }

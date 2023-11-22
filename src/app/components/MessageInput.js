@@ -1,5 +1,5 @@
 "use client"
-import "./MessageBoxStyle.css";
+import "./styles/MessageBoxStyle.css";
 import React, { useState } from 'react';
 import { useDispatch, useSelector } from "react-redux";
 import socket from "../socket";

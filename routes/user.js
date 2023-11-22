@@ -12,6 +12,9 @@ router.post('/addcontact', async (req, res)=>{
         name: req.body.name,
         email: req.body.email
     };
+    const userContact = await User.findOne({email: newContact.email});
+    if(!userContact) return res.send(JSON.stringify({status: "failed!", action: "The email is not registered."}));
+    newContact.profileImage = userContact.profileImage;
 
     const user = await User.findOne({ email: req.token_data.data.email });
     const foundContact = user.contacts.find((contact) => contact.email === newContact.email);
@@ -22,6 +25,7 @@ router.post('/addcontact', async (req, res)=>{
     user.contacts.push(newContact);
     const updatedUser = await user.save();
     res.send(JSON.stringify(updatedUser));
+
 });
 
 module.exports = router;

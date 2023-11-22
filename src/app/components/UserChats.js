@@ -16,17 +16,16 @@ export default function UserChats() {
 
     async function getUserChats() {
         try {
-            let response = await fetch("http://localhost:8080/chats/", {credentials: 'include'});
+            let response = await fetch("chats/", { credentials: 'include' });
             response = await response.json();
             let chats = [];
-            response.participants.forEach(x =>{
+            response.participants.forEach(x => {
                 const matchingProfileImage = response.profileImages.find(image => image.email === x.email);
-				if (matchingProfileImage) {
+                if (matchingProfileImage) {
                     x.profileImage = matchingProfileImage.profileImage;
-					chats.push(x);
-				}
+                    chats.push(x);
+                }
             });
-            console.log(chats);
             dispatch(setUserchats(chats));
         } catch (error) {
             console.log(error);
@@ -35,7 +34,7 @@ export default function UserChats() {
 
     async function onClickChat(index) {
         try {
-            let response = await fetch("http://localhost:8080/chats/get", {
+            let response = await fetch("chats/get", {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -46,19 +45,18 @@ export default function UserChats() {
                 credentials: 'include'
             });
             response = await response.json();
-            if (response.messages) dispatch(setMessages({userinfo: userchats.chats[index], messages: response.messages, messagesId: response._id}));
+            console.log("userinfo: ", userchats.chats[index]);
+            if (response.messages) dispatch(setMessages({ userinfo: userchats.chats[index], messages: response.messages, messagesId: response._id }));
         } catch (error) {
             console.log(error);
         }
     }
 
     function showUnreadMessages(unreadMsgs) {
-        console.log(unreadMsgs);
-        if(unreadMsgs > 0){
-            console.log(unreadMsgs);
-            return (<span style={{alignSelf: "center", color: "white", marginLeft: "auto", marginRight: "15px", background: "#08d360", borderRadius: "50%", padding: "1px 7px"}}>{unreadMsgs}</span>);
+        if (unreadMsgs > 0) {
+            return (<span style={{ alignSelf: "center", color: "white", marginLeft: "auto", marginRight: "15px", background: "#08d360", borderRadius: "50%", padding: "1px 7px" }}>{unreadMsgs}</span>);
         }
-        else{
+        else {
             return (<></>);
         }
     }
@@ -66,10 +64,10 @@ export default function UserChats() {
     function showChats() {
         let elements = [];
         for (let i = 0; i < userchats.chats.length; i++) {
-            elements.push(<div key={i} onClick={() => onClickChat(i)} style={{display: "flex", padding: "5px"}}>
-                <Image src={userchats.chats[i].profileImage} alt="Image not found!" height={50} width={50} priority={true} style={{borderRadius: "50%"}} />
-                <span style={{marginLeft: "5px", alignSelf: "center"}}>{userchats.chats[i].username}</span>
-                <span style={{marginLeft: "5px", alignSelf: "center"}}>{userchats.chats[i].isOnline ? <span style={{color: "greenyellow"}}>Online</span>: <span style={{color: "red"}}>Offline</span>}</span>
+            elements.push(<div key={i} onClick={() => onClickChat(i)} style={{ display: "flex", padding: "5px" }}>
+                <Image src={userchats.chats[i].profileImage} alt="Image not found!" height={50} width={50} priority={true} style={{ borderRadius: "50%" }} />
+                <span style={{ marginLeft: "5px", alignSelf: "center" }}>{userchats.chats[i].username}</span>
+                <span style={{ marginLeft: "5px", alignSelf: "center" }}>{userchats.chats[i].isOnline ? <span style={{ color: "greenyellow" }}>Online</span> : <span style={{ color: "red" }}>Offline</span>}</span>
                 {showUnreadMessages(userchats.chats[i].unreadMsgs)}
             </div>);
         }
@@ -77,6 +75,6 @@ export default function UserChats() {
     }
 
     return (<>
-        { userchats && userchats.chats ? showChats() : <>No Chats</>}
+        {userchats && userchats.chats && userchats.chats.length ? showChats() : <>No Chats</>}
     </>)
 }

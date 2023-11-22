@@ -9,6 +9,10 @@ const ContactSchema = new Schema({
     email:{
         type: String,
         required: true
+    },
+    profileImage:{
+        type: String,
+        default: "/defaultprofileImg.png"
     }
 });
 

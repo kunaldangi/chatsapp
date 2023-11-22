@@ -17,7 +17,7 @@ export default function CheckLoginToken() {
 
 	async function sendCookie() {
 	    try {
-	        const response = await fetch("http://localhost:8080/verifytoken", { credentials: 'include'});
+	        const response = await fetch("verifytoken", { credentials: 'include'});
 	        const data = await response.json();
 			if(data.status == "failed!"){
 				router.push("/signin");

@@ -22,7 +22,7 @@ passport.deserializeUser((user, done) => {
 passport.use(new GoogleStrategy({ // Google OAuth Strategy
     clientID: process.env.CLIENT_ID,
     clientSecret: process.env.CLIENT_SECRET,
-    callbackURL: 'http://localhost:8080/auth/google/callback',
+    callbackURL: 'auth/google/callback',
 }, (accessToken, refreshToken, profile, done) => { // Create a user object based on 'profile' data
 
     const user = {
@@ -47,7 +47,6 @@ router.get('/callback', passport.authenticate('google', { failureRedirect: '/' }
                 data: check_email
             }
             const login_token = jwt.sign(payload, process.env.LOGIN_TOKEN_SECRET);
-            // console.log("Payload: ", payload, "\nLogin Token: ", login_token);
             res.cookie('login_token', `${login_token}`, { maxAge: (10 * 365 * 24 * 60 * 60)}); // 10 year cookie age
         }
         else{
@@ -70,10 +69,9 @@ router.get('/callback', passport.authenticate('google', { failureRedirect: '/' }
                 }
             }
             const login_token = jwt.sign(payload, process.env.LOGIN_TOKEN_SECRET);
-            // console.log("Payload: ", payload, "\nLogin Token: ", login_token);
             res.cookie('login_token', `${login_token}`);
         }
-        res.redirect('http://localhost:8080');
+        res.redirect('/');
     }
 );
 
