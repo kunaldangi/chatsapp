@@ -1,3 +1,0 @@
-- Send Multi Media through chat
-- Send Image through chat
-- Send Voice Recording chat
