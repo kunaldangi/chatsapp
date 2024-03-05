@@ -1,6 +1,6 @@
 import { App } from "@/components/App";
 
-export default function Home() {
+export default function Page() {
 	return (<>
 		<App />
 	</>);

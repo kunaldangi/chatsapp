@@ -1,4 +1,4 @@
-Send/Receive Message
+Send/Receive/Delete Message
 Read/Unread Message
 Contact Add/Remove/Edit
 Group Create/Role/Edit
