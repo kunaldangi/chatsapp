@@ -4,10 +4,14 @@ import { createServer, Server as HTTPServer } from "http";
 import express, { Express } from "express";
 import cors from "cors";
 import bodyParser from "body-parser";
+import cookieParser from "cookie-parser";
 
 // --- Modules ---
-import { ioServer } from "./socket";
-import { Database } from "./db";
+import socketServer from "./socket";
+import db from "./db";
+
+// --- Routes ---
+import authRouter from "./routes/api/auth";
 
 const port: number = 8080;
 const expressApp: Express = express();
@@ -18,13 +22,12 @@ expressApp.use(cors({
     credentials: true
 }));
 expressApp.use(bodyParser.json());
+expressApp.use(cookieParser());
 
-const dbServer: Database = new Database();
-dbServer.initialize();
+db.initialize();
+socketServer.initialize(httpServer);
 
-const socketServer: ioServer = new ioServer(httpServer);
-
-
+expressApp.use("/api/auth", authRouter);
 
 
 httpServer.listen(port, () => {

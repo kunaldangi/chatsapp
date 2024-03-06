@@ -1,9 +1,15 @@
-import { Sequelize } from 'sequelize';
+// --- Types ---
+import { Sequelize, ModelCtor, Model} from 'sequelize';
+
+// --- Modeles ---
 import { initializeUserModel } from './Models/User';
+import { initializeOtpModel } from './Models/Otp';
 
 export class Database {
     public sequelize: Sequelize | undefined;
-    public models: any = {};
+    
+    public user: ModelCtor<Model<any, any>> | undefined;
+    public otp: ModelCtor<Model<any, any>> | undefined;
 
     public async initialize(){ // we need this because constructor can't be async
         let dbConfig = {
@@ -28,8 +34,12 @@ export class Database {
             console.log(`Unable to connect with database ${dbConfig.host}:${dbConfig.name}\nERROR: ${error}`)
         }
 
-        this.models.User = initializeUserModel(this.sequelize);
+        this.user = initializeUserModel(this.sequelize);
+        this.otp = initializeOtpModel(this.sequelize);
         
         await this.sequelize.sync({alter: true});
     }
 }
+
+const db: Database = new Database();
+export default db;
