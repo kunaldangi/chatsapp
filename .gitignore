@@ -1,7 +1,4 @@
 */node_modules
-/old-app
-*.env
-.env
-server/.env
 */dist
-server/dist/db/index.js
+*.env
+/old-app

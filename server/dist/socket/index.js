@@ -3,7 +3,10 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.ioServer = void 0;
 const socket_io_1 = require("socket.io");
 class ioServer {
-    constructor(httpServer) {
+    constructor() {
+        this.io = {};
+    }
+    initialize(httpServer) {
         console.log("Initializing socket server!");
         this.io = new socket_io_1.Server(httpServer, {
             cors: {
@@ -21,3 +24,5 @@ class ioServer {
     }
 }
 exports.ioServer = ioServer;
+const socketServer = new ioServer();
+exports.default = socketServer;

@@ -10,12 +10,12 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Database = void 0;
+// --- Types ---
 const sequelize_1 = require("sequelize");
+// --- Modeles ---
 const User_1 = require("./Models/User");
+const Otp_1 = require("./Models/Otp");
 class Database {
-    constructor() {
-        this.models = {};
-    }
     initialize() {
         return __awaiter(this, void 0, void 0, function* () {
             let dbConfig = {
@@ -38,9 +38,12 @@ class Database {
             catch (error) {
                 console.log(`Unable to connect with database ${dbConfig.host}:${dbConfig.name}\nERROR: ${error}`);
             }
-            this.models.User = (0, User_1.initializeUserModel)(this.sequelize);
+            this.user = (0, User_1.initializeUserModel)(this.sequelize);
+            this.otp = (0, Otp_1.initializeOtpModel)(this.sequelize);
             yield this.sequelize.sync({ alter: true });
         });
     }
 }
 exports.Database = Database;
+const db = new Database();
+exports.default = db;
