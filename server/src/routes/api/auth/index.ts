@@ -77,7 +77,10 @@ router.post("/verify", async (req, res) => {
         await db.otp?.destroy({ where: { email: otp_data.email } });
         let userData: any = await db.user?.create({ username: otp_data.username, email: otp_data.email, password: hashPass });
     
-        if(userData[0]?.dataValues.email) return res.send(JSON.stringify({ success: "Account created successfully!"}));
+        if(userData?.dataValues.email){
+            res.clearCookie('otp_token');
+            return res.send(JSON.stringify({ success: "Account created successfully!"}));
+        }
     
         res.send(JSON.stringify({error: "Something went wrong!"}));
     } catch (error) {
