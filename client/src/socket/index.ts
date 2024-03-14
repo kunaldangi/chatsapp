@@ -5,7 +5,9 @@ export class ioClient {
     
     constructor() {
         console.log("Initializing socket client!");
-        this.io = io("http://localhost:8080");
+        this.io = io("http://localhost:8080", {
+            withCredentials: true,
+        });
 
         this.io.on("connect", () => {
             console.log("connecteds");

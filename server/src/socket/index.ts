@@ -1,24 +1,53 @@
 import { Server as HTTPServer } from "http";
-import { Server as SocketServer } from "socket.io";
+import { Server as ServerSocket, Socket as ClientSocket} from "socket.io";
+
+import verifyToken from "../lib/jwt";
+import { initializeEvents } from "./events";
 
 export class ioServer{
-	public io: SocketServer = {} as SocketServer;
+	public serverIO: ServerSocket = {} as ServerSocket;
+	public usersData: Map<string, any> = new Map();
+	public connectedUsers: Map<number, ClientSocket> = new Map();
 
 	public initialize(httpServer: HTTPServer){
 		console.log("Initializing socket server!");
-		this.io = new SocketServer(httpServer,{
+		this.serverIO = new ServerSocket(httpServer,{
 			cors: {
 				allowedHeaders: ['*'],
-				origin: "*",
+				origin: "http://localhost:3000",
 				credentials: true
 			}
 		});
 
-		this.io.on("connection", (socket) => {
-			console.log(`${socket.handshake.address} user connected with ID: ${socket.id}`);
+		this.serverIO.use(async (clientSocket: ClientSocket, next) => { // client authentication
+			if (clientSocket.handshake.headers.cookie) {
+				const cookie = require('cookie');
+				const parsedCookies = cookie.parse(clientSocket.handshake.headers.cookie);
 
-			socket.on("disconnect", () => {
-				console.log(`${socket.handshake.address} user disconnected with ID: ${socket.id}`);
+				try { 
+					const sessionData: any = await verifyToken(parsedCookies?.session || '', process.env.JWT_SESSION_SECRET || '');
+					this.usersData.set(clientSocket.id, sessionData);
+					this.connectedUsers.set(sessionData.userId, clientSocket);
+				} catch (error) { 
+					console.log("Session not found!");
+					clientSocket.disconnect();
+				}
+			}
+			next();
+		});
+
+		this.serverIO.on("connection", (clientSocket: ClientSocket) => {
+			console.log(`${clientSocket.handshake.address} user connected with ID: ${clientSocket.id}`);
+			// const userData = this.usersData.get(clientSocket.id);
+			// console.log(this.usersData.get(clientSocket.id), this.connectedUsers.get(userData?.id));
+
+			initializeEvents(this, clientSocket);
+		
+			clientSocket.on("disconnect", () => {
+				console.log(`${clientSocket.handshake.address} user disconnected with ID: ${clientSocket.id}`);
+				const userData = this.usersData.get(clientSocket.id);
+				this.usersData.delete(clientSocket.id);
+				this.connectedUsers.delete(userData?.id);
 			});
 		});
 	}

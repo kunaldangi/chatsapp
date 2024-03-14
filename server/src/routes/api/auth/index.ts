@@ -35,6 +35,8 @@ router.post("/register", async (req, res) => {
         await db.otp?.destroy({ where: { email: req.body.email } });
         const otp = await db.otp?.create({ type: otp_payload.type, code: otp_code, email: otp_payload.email });
 
+        if(!otp?.dataValues) return res.send(JSON.stringify({ error: "Something went wrong." }));
+
         let email_status: any = await send_mail({
             from: process.env.GMAIL_ID,
             to: req.body.email,
@@ -117,6 +119,12 @@ router.post("/login", async (req, res) => {
         console.log(`ERROR (/api/auth/login): ${error}`);
         res.send(JSON.stringify({error: "Something went wrong!"}));  
     }
+});
+
+router.post("/logout", async (req, res) => {
+    if(!req.cookies?.session) return res.send(JSON.stringify({ error: "You are not logged in." }));
+    res.clearCookie('session');
+    res.send(JSON.stringify({ success: "Logged out successfully!" }));
 });
 
 export default router;

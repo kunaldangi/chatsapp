@@ -1,13 +1,14 @@
 :root {
     --green: #00a884;
     --backgroundColor: #111b21;
-    --pervTextColor: #8696a0;
+    --secondaryColor: #202c33;
 
-    --outlineBorder: #404c52;
+    --outlineBorder: #8696a026;
 
     --msgColor: #e9edef;
     --sendMsgBgColor: #005c4b;
-    --recMsgBgColor: #202c33;
+
+    --iconLighter: #8696a0;
 }
 
 * {
